@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'network.dart';
 import 'dart:collection';
 import 'package:intl/intl.dart';
+import 'fav_screen.dart';
 
 void main() {
   final network = Network();
