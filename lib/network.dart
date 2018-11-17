@@ -12,13 +12,16 @@ class NewsAppError extends Error {
 }
 
 class NewsItem {
-  final String id;
+  final int id;
   final String title;
   final String author;
-  final String date;
-  final bool isFav;
+  final int date;
+  bool isFav;
 
   NewsItem({this.id, this.title, this.author, this.date, this.isFav});
+
+
+  NewsItem.name(this.id, this.title, this.author, this.date, this.isFav);
 
   factory NewsItem.fromJson(Map<String, dynamic> json) {
     return NewsItem(
@@ -36,35 +39,40 @@ class NewsId {
 
   NewsId({this.idList});
 
-  factory NewsId.fromJson(Map<String, dynamic> json) {
+  factory NewsId.fromJson(dynamic json) {
     return NewsId(
-        idList: json['']
+        idList: List<int>.from(json)
     );
   }
 
 }
 
-class NewsAppBlock {
+class Network {
   HashMap<int, NewsItem> _cachedNewsList;
   static const _baseUrl = 'https://hacker-news.firebaseio.com/v0/';
 
   var _newsList = <NewsItem>[];
-
+  final _isLoadingSubject = BehaviorSubject<bool>(seedValue: false);
   final _newsListSubject = BehaviorSubject<UnmodifiableListView<NewsItem>>();
 
-  NewsAppBlock() {
+  Network() {
     _cachedNewsList = HashMap<int, NewsItem>();
     _initializeArticles();
   }
+
+  Stream<bool> get isLoading => _isLoadingSubject.stream;
+  Stream<UnmodifiableListView<NewsItem>> get newsItem => _newsListSubject.stream;
 
   Future<void> _initializeArticles() async {
     _getNewsandUpdate(await _getIds());
   }
 
   _getNewsandUpdate(List<int> ids) async {
+    _isLoadingSubject.add(true);
     await _updateNews(ids);
 
     _newsListSubject.add(UnmodifiableListView(_newsList));
+  _isLoadingSubject.add(false);
   }
 
   Future<Null> _updateNews(List<int> ids) async {
@@ -74,12 +82,12 @@ class NewsAppBlock {
   }
 
   Future<List<int>> _getIds() async {
-    final url = '${_baseUrl}item/topstories.json?print=pretty';
+    final url = '${_baseUrl}topstories.json?print=pretty';
     final response = await http.get(url);
     if (response.statusCode != 200) {
       throw NewsAppError("Stories couldn't be fetched.");
     }
-    return NewsId.fromJson(json.decode(response.body)).idList;
+    return NewsId.fromJson(json.decode(response.body)).idList.take(10).toList();
   }
 
   Future<NewsItem> _fetchNewsItem(int id) async {
