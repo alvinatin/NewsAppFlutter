@@ -57,13 +57,13 @@ class Network {
 
   Network() {
     _cachedNewsList = HashMap<int, NewsItem>();
-    _initializeArticles();
+    _initializNewsList();
   }
 
   Stream<bool> get isLoading => _isLoadingSubject.stream;
   Stream<UnmodifiableListView<NewsItem>> get newsItem => _newsListSubject.stream;
 
-  Future<void> _initializeArticles() async {
+  Future<void> _initializNewsList() async {
     _getNewsandUpdate(await _getIds());
   }
 
